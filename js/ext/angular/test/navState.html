@@ -1,7 +1,7 @@
-<html ng-app="navTest">
+<html ng-app="navState">
   <head>
     <meta charset="utf-8">
-    <title>Nav Bars</title>
+    <title>Nav State</title>
 
     <!-- Sets initial viewport load and disables zooming  -->
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
@@ -12,25 +12,33 @@
     <script src="../../../../dist/js/angular/angular-route.js"></script>
     <script src="../../../../dist/js/angular/angular-touch.js"></script>
     <script src="../../../../dist/js/angular/angular-sanitize.js"></script>
+    <script src="../../../../dist/js/angular/angular-ui-router.js"></script>
     <script src="../../../../dist/js/ionic-angular.js"></script>
   </head>
   <body>
-    <pane nav-router animation="slide-left-right">
-      <nav-bar animation="nav-title-slide-ios7" type="bar-positive" back-button-type="button-icon" back-button-icon="icon ion-arrow-left-c"></nav-bar>
-      <ng-view></ng-view>
+
+    <pane nav-state animation="slide-left-right">
+      <nav-bar animation="nav-title-slide-ios7" 
+               type="bar-positive" 
+               back-button-type="button-icon" 
+               back-button-icon="ion-arrow-left-c"></nav-bar>
+      <ui-view></ui-view>
     </pane>
 
-    <script id="page1.html" type="text/ng-template">
-      <nav-page title="'Bears'" hide-back-button="true" right-buttons="rightButtons" hide-nav-bar="true">
+    <script id="home.html" type="text/ng-template">
+      <div>
         <content has-header="true">
-          <h1>Page 1</h1>
-          <span>{{num}}</span>
-          <a class="button button-pure" nav-back>Back</a>
-          <a class="button button-assertive" href="#/page2">Next</a>
+          <h1>Home</h1>
+          <ui-view></ui-view>
         </content>
-      </nav-page>
+      </div>
     </script>
-    <script id="page2.html" type="text/ng-template">
+
+    <script id="view1.inner.html" type="text/ng-template">
+      view1 inner content
+    </script>
+
+    <script id="view2.html" type="text/ng-template">
       <nav-page title="'Beets'">
         <content has-header="true">
           <h1>Page 2</h1>
@@ -39,52 +47,35 @@
         </content>
       </nav-page>
     </script>
-    <script id="page3.html" type="text/ng-template">
-      <nav-page title="'Battlestar Galactica'">
-        <content has-header="true">
-          <h1>Page 3</h1>
-          <a class="button button-pure" nav-back>Back</a>
-        </content>
-      </nav-page>
-    </script>
+
     <script>
-      angular.module('navTest', ['ionic'])
+      angular.module('navState', ['ionic', 'ui.router'])
 
 
-      .config(function($routeProvider, $locationProvider) {
-        $routeProvider.when('/cats', {
-          templateUrl: 'page1.html',
-          controller: 'Page1Ctrl'
-        });
-
-        $routeProvider.when('/page2', {
-          templateUrl: 'page2.html',
-        });
-
-        $routeProvider.when('/page3', {
-          templateUrl: 'page3.html',
-        });
-
-        $routeProvider.otherwise({
-          redirectTo: '/cats'
-        });
-
-        // configure html5 to get links working on jsfiddle
-        //$locationProvider.html5Mode(true);
+      .config(function($stateProvider, $urlRouterProvider) {
+        // For any unmatched url, send to /route1
+        $urlRouterProvider.otherwise("/")
+      
+        $stateProvider
+          .state('home', {
+              url: "/",
+              templateUrl: "home.html",
+              controller: 'HomeCtrl'
+          })
+          .state('view1.inner', {
+              url: "inner/",
+              templateUrl: "view1.inner.html",
+              controller: 'View1InnerCtrl'
+          })
 
       })
 
-      .controller('Page1Ctrl', function($scope) {
-        $scope.num = Math.floor(Math.random() * 100);
+      .controller('HomeCtrl', function($scope) {
+        console.log('Load HomeCtrl');
+      })
 
-        $scope.rightButtons = [
-          { 
-            content: 'Hello',
-            tap: function(e) {
-              console.log('Click button');
-            }
-          }
-        ]
+      .controller('View1InnerCtrl', function($scope) {
+        console.log('View1InnerCtrl');
       });
 
       

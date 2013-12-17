@@ -19,13 +19,13 @@
 
 var actualLocation = null;
 
-angular.module('ionic.ui.navRouter', ['ionic.service.gesture'])
+angular.module('ionic.ui.navState', ['ionic.service.gesture'])
 
 .run(['$rootScope', function($rootScope) {
   $rootScope.stackCursorPosition = 0;
 }])
 
-.directive('navRouter', ['$rootScope', '$timeout', '$location', '$window', '$route', function($rootScope, $timeout, $location, $window, $route) {
+.directive('navState', ['$rootScope', '$timeout', '$location', '$window', '$route', function($rootScope, $timeout, $location, $window, $route) {
   return {
     restrict: 'AC',
     // So you can require being under this
@@ -41,8 +41,8 @@ angular.module('ionic.ui.navRouter', ['ionic.service.gesture'])
     }],
 
     link: function($scope, $element, $attr, ctrl) {
+return; /////  HOLD UP FOR NOW  **********************************************************
       if(!$element.length) return;
-
       $scope.animation = $attr.animation;
 
       $element[0].classList.add('noop-animation');
@@ -99,7 +99,7 @@ angular.module('ionic.ui.navRouter', ['ionic.service.gesture'])
         }
       });  
 
-      $scope.$on('navRouter.goBack', function(e) {
+      $scope.$on('navState.goBack', function(e) {
         ctrl.goBack();
       });
 
@@ -147,7 +147,7 @@ angular.module('ionic.ui.navRouter', ['ionic.service.gesture'])
 /**
  * Our Nav Bar directive which updates as the controller state changes.
  */
-.directive('navRouterBar', ['$rootScope', '$animate', '$compile', function($rootScope, $animate, $compile) {
+.directive('navBar', ['$rootScope', '$animate', '$compile', function($rootScope, $animate, $compile) {
 
   /**
    * Perform an animation between one tab bar state and the next.
@@ -183,7 +183,7 @@ angular.module('ionic.ui.navRouter', ['ionic.service.gesture'])
 
   return {
     restrict: 'E',
-    require: '^navRouter',
+    require: '^navState',
     replace: true,
     scope: {
       type: '@',
@@ -205,7 +205,9 @@ angular.module('ionic.ui.navRouter', ['ionic.service.gesture'])
     link: function($scope, $element, $attr, navCtrl) {
       var backButton;
 
-      $element.addClass($attr.animation);
+      if($attr.animation) {
+        $element[0].classList.add($attr.animation);
+      }
 
       // Create the back button content and show/hide it based on scope settings
       $scope.enableBackButton = true;
@@ -261,24 +263,24 @@ angular.module('ionic.ui.navRouter', ['ionic.service.gesture'])
         }
       };
 
-      $scope.$parent.$on('navRouter.showBackButton', function(e, data) {
+      $scope.$parent.$on('navState.showBackButton', function(e, data) {
         $scope.enableBackButton = true;
       });
 
-      $scope.$parent.$on('navRouter.hideBackButton', function(e, data) {
+      $scope.$parent.$on('navState.hideBackButton', function(e, data) {
         $scope.enableBackButton = false;
       });
 
       // Listen for changes on title change, and update the title
-      $scope.$parent.$on('navRouter.pageChanged', function(e, data) {
+      $scope.$parent.$on('navState.pageChanged', function(e, data) {
         updateHeaderData(data);
       });
 
-      $scope.$parent.$on('navRouter.pageShown', function(e, data) {
+      $scope.$parent.$on('navState.pageShown', function(e, data) {
         updateHeaderData(data);
       });
 
-      $scope.$parent.$on('navRouter.titleChanged', function(e, data) {
+      $scope.$parent.$on('navState.titleChanged', function(e, data) {
         var oldTitle = $scope.currentTitle;
         $scope.oldTitle = oldTitle;
 
@@ -296,10 +298,10 @@ angular.module('ionic.ui.navRouter', ['ionic.service.gesture'])
       });
 
       // If a nav page changes the left or right buttons, update our scope vars
-      $scope.$parent.$on('navRouter.leftButtonsChanged', function(e, data) {
+      $scope.$parent.$on('navState.leftButtonsChanged', function(e, data) {
         $scope.leftButtons = data;
       });
-      $scope.$parent.$on('navRouter.rightButtonsChanged', function(e, data) {
+      $scope.$parent.$on('navState.rightButtonsChanged', function(e, data) {
         $scope.rightButtons = data;
       });
 
@@ -321,10 +323,10 @@ angular.module('ionic.ui.navRouter', ['ionic.service.gesture'])
   };
 }])
 
-.directive('navPage', ['$parse', function($parse) {
+.directive('navView', ['$parse', function($parse) {
   return {
     restrict: 'E',
-    require: '^navRouter',
+    require: '^navState',
     scope: {
       leftButtons: '=',
       rightButtons: '=',
@@ -349,9 +351,9 @@ angular.module('ionic.ui.navRouter', ['ionic.service.gesture'])
       navCtrl.navBar.isVisible = !$scope.hideNavBar;
 
       if($scope.hideBackButton === true) {
-        $scope.$emit('navRouter.hideBackButton');
+        $scope.$emit('navState.hideBackButton');
       } else {
-        $scope.$emit('navRouter.showBackButton');
+        $scope.$emit('navState.showBackButton');
       }
 
       // Whether we should animate on tab change, also impacts whether we
@@ -361,11 +363,11 @@ angular.module('ionic.ui.navRouter', ['ionic.service.gesture'])
 
       // watch for changes in the left buttons
       $scope.$watch('leftButtons', function(value) {
-        $scope.$emit('navRouter.leftButtonsChanged', $scope.leftButtons);
+        $scope.$emit('navState.leftButtonsChanged', $scope.leftButtons);
       });
 
       $scope.$watch('rightButtons', function(val) {
-        $scope.$emit('navRouter.rightButtonsChanged', $scope.rightButtons);
+        $scope.$emit('navState.rightButtonsChanged', $scope.rightButtons);
       });
 
       /*
@@ -380,7 +382,7 @@ angular.module('ionic.ui.navRouter', ['ionic.service.gesture'])
 
       // watch for changes in the title
       $scope.$watch('title', function(value) {
-        $scope.$emit('navRouter.titleChanged', {
+        $scope.$emit('navState.titleChanged', {
           title: value,
           animate: $scope.animate
         });
@@ -389,24 +391,24 @@ angular.module('ionic.ui.navRouter', ['ionic.service.gesture'])
   };
 }])
 
-.directive('navBack', ['$window', '$rootScope', 'Gesture', function($window, $rootScope, Gesture) {
-  return {
-    restrict: 'AC',
-    link: function($scope, $element, $attr, navCtrl) {
-      var goBack = function(e) {
-        // Only trigger back if the stack is greater than zero
-        if($rootScope.stackCursorPosition > 0) {
-          $window.history.back();
+// .directive('navBack', ['$window', '$rootScope', 'Gesture', function($window, $rootScope, Gesture) {
+//   return {
+//     restrict: 'AC',
+//     link: function($scope, $element, $attr, navCtrl) {
+//       var goBack = function(e) {
+//         // Only trigger back if the stack is greater than zero
+//         if($rootScope.stackCursorPosition > 0) {
+//           $window.history.back();
 
-          // Fallback for bad history supporting devices
-          $scope.$emit('navRouter.goBack');
-        }
-        e.alreadyHandled = true;
-        return false;
-      };
-      $element.bind('click', goBack);
-    }
-  };
-}]);
+//           // Fallback for bad history supporting devices
+//           $scope.$emit('navState.goBack');
+//         }
+//         e.alreadyHandled = true;
+//         return false;
+//       };
+//       $element.bind('click', goBack);
+//     }
+//   };
+// }]);
 
 })();

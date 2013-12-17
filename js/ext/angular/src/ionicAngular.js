@@ -16,7 +16,7 @@ angular.module('ionic.ui', [
                             'ionic.ui.content',
                             'ionic.ui.scroll',
                             'ionic.ui.tabs',
-                            'ionic.ui.navRouter',
+                            'ionic.ui.navState',
                             'ionic.ui.header',
                             'ionic.ui.sideMenu',
                             'ionic.ui.slideBox',
