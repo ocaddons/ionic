@@ -22,7 +22,7 @@ angular.module('ionic.ui.content', ['ionic.ui.service'])
   return {
     restrict: 'E',
     replace: true,
-    template: '<div class="scroll-content"></div>',
+    template: '<div class="scroll-content" ng-transclude></div>',
     transclude: true,
     scope: {
       onRefresh: '&',
@@ -39,6 +39,7 @@ angular.module('ionic.ui.content', ['ionic.ui.service'])
     },
     compile: function(element, attr, transclude) {
       return function($scope, $element, $attr) {
+
         var clone, sc, sv,
           addedPadding = false,
           c = $element.eq(0);
@@ -50,12 +51,12 @@ angular.module('ionic.ui.content', ['ionic.ui.service'])
 
         // If they want plain overflow scrolling, add that as a class
         if($scope.scroll === "false") {
-          clone = transclude($scope.$parent);
-          $element.append(clone);
+          //clone = transclude($scope.$parent);
+          //$element.append(clone);
         } else if(attr.overflowScroll === "true") {
           c.addClass('overflow-scroll');
-          clone = transclude($scope.$parent);
-          $element.append(clone);
+          //clone = transclude($scope.$parent);
+          //$element.append(clone);
         } else {
           sc = document.createElement('div');
           sc.className = 'scroll';
@@ -66,8 +67,8 @@ angular.module('ionic.ui.content', ['ionic.ui.service'])
           $element.append(sc);
 
           // Pass the parent scope down to the child
-          clone = transclude($scope.$parent);
-          angular.element($element[0].firstElementChild).append(clone);
+          //clone = transclude($scope.$parent);
+          //angular.element($element[0].firstElementChild).append(clone);
 
           var refresher = $element[0].querySelector('.scroll-refresher');
           var refresherHeight = refresher && refresher.clientHeight || 0;
