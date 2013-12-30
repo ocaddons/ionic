@@ -1,4 +1,4 @@
-angular.module('ionic.ui.tabs', ['ngAnimate'])
+angular.module('ionic.ui.tabs', ['ionic.service.view', 'ngAnimate'])
 
 /**
  * @description
@@ -7,14 +7,17 @@ angular.module('ionic.ui.tabs', ['ngAnimate'])
  * on a tab bar. Modelled off of UITabBarController.
  */
 
-.directive('tabs', function() {
+.directive('tabs', [function() {
   return {
     restrict: 'E',
     replace: true,
     scope: true,
     transclude: true,
-    controller: ['$scope', '$element', '$animate', function($scope, $element, $animate) {
+    controller: ['$scope', '$rootScope', '$element', '$animate', '$state', function($scope, $rootScope, $element, $animate, $state) {
       var _this = this;
+
+      $scope.tabCount = 0;
+      $scope.selectedIndex = -1;
 
       angular.extend(this, ionic.controllers.TabBarController.prototype);
 
@@ -34,24 +37,50 @@ angular.module('ionic.ui.tabs', ['ngAnimate'])
         }
       });
 
-      this.add = function(controller) {
-        this.addController(controller);
-        this.select(0);
+      this.add = function(tabScope) {
+        tabScope.tabIndex = $scope.tabCount;
+        this.addController(tabScope);
+        if(tabScope.tabIndex === 0) {
+          this.select(0);
+        }
+        $scope.tabCount++;
       };
 
-      this.select = function(controllerIndex) {
-        $scope.activeAnimation = $scope.animation;
-        _this.selectController(controllerIndex);
+      this.select = function(tabIndex, viewTitle) {
+        if(tabIndex !== $scope.selectedIndex) {
+          $scope.selectedIndex = tabIndex;
+          $scope.activeAnimation = $scope.animation;
+          _this.selectController(tabIndex);
+
+          var viewData = {
+            type: 'tab',
+            typeIndex: tabIndex
+          };
+
+          for(var x=0; x<this.controllers.length; x++) {
+            if(tabIndex === this.controllers[x].tabIndex) {
+              viewData.title = this.controllers[x].title;
+              viewData.historyId = this.controllers[x].$historyId;
+              viewData.href = this.controllers[x].href;
+              viewData.uiSref = this.controllers[x].viewSref;
+              viewData.uiViewName = this.controllers[x].uiViewName;
+              break;
+            }
+          }
+          $scope.$emit('viewState.viewShown', viewData);
+        }
       };
 
       $scope.controllers = this.controllers;
 
       $scope.tabsController = this;
+
     }],
     //templateUrl: 'ext/angular/tmpl/ionicTabBar.tmpl.html',
     template: '<div class="view"><tab-controller-bar></tab-controller-bar></div>',
     compile: function(element, attr, transclude, tabsCtrl) {
       return function($scope, $element, $attr) {
+
         var tabs = $element[0].querySelector('.tabs');
 
         $scope.tabsType = $attr.tabsType || 'tabs-positive';
@@ -82,13 +111,14 @@ angular.module('ionic.ui.tabs', ['ngAnimate'])
         transclude($scope, function(cloned) {
           $element.prepend(cloned);
         });
+
       };
     }
   };
-})
+}])
 
 // Generic controller directive
-.directive('tab', ['$animate', '$parse', function($animate, $parse) {
+.directive('tab', ['ViewService', '$rootScope', '$animate', '$parse', function(ViewService, $rootScope, $animate, $parse) {
   return {
     restrict: 'E',
     require: '^tabs',
@@ -98,10 +128,14 @@ angular.module('ionic.ui.tabs', ['ngAnimate'])
       return function($scope, $element, $attr, tabsCtrl) {
         var childScope, childElement;
 
+        ViewService.registerHistory($scope);
+
         $scope.title = $attr.title;
         $scope.icon = $attr.icon;
         $scope.iconOn = $attr.iconOn;
         $scope.iconOff = $attr.iconOff;
+        $scope.viewSref = $attr.uiSref;
+        $scope.href = $attr.href;
 
         // Should we hide a back button when this tab is shown
         $scope.hideBackButton = $scope.$eval($attr.hideBackButton);
@@ -124,7 +158,7 @@ angular.module('ionic.ui.tabs', ['ngAnimate'])
         $scope.$watch(leftButtonsGet, function(value) {
           $scope.leftButtons = value;
           if($scope.doesUpdateNavRouter) {
-            $scope.$emit('navRouter.leftButtonsChanged', $scope.rightButtons);
+            $scope.$emit('viewState.leftButtonsChanged', $scope.rightButtons);
           }
         });
 
@@ -134,7 +168,7 @@ angular.module('ionic.ui.tabs', ['ngAnimate'])
         });
 
         tabsCtrl.add($scope);
-        
+
         $scope.$watch('isVisible', function(value) {
           if(childElement) {
             $animate.leave(childElement);
@@ -154,23 +188,31 @@ angular.module('ionic.ui.tabs', ['ngAnimate'])
 
               $animate.enter(clone, $element.parent(), $element);
 
-              if($scope.title) {
-                // Send the title up in case we are inside of a nav controller
-                if($scope.doesUpdateNavRouter) {
-                  $scope.$emit('navRouter.pageShown', {
-                    title: $scope.title,
-                    rightButtons: $scope.rightButtons,
-                    leftButtons: $scope.leftButtons,
-                    hideBackButton: $scope.hideBackButton,
-                    animate: $scope.animateNav
-                  });
-                }
-                //$scope.$emit('navRouter.titleChanged', $scope.title);
-              }
               $scope.$broadcast('tab.shown');
             });
           }
         });
+
+        // check if it has a ui-view in it
+        transclude($scope.$new(), function(clone) {
+          var uiViewEle = clone[0].querySelector('[ui-view]');
+          $scope.hasUiView = (uiViewEle !== null);
+          if($scope.hasUiView) {
+            // this tab has a ui-view
+            $scope.uiViewName = uiViewEle.getAttribute('ui-view');
+            if( ViewService.isCurrentStateUiView( $scope.uiViewName ) ) {
+              // this tab's ui-view is the current one, go to it!
+              tabsCtrl.select($scope.tabIndex);
+            }
+          }
+        });
+
+        $rootScope.$on('$stateChangeSuccess', function(value){
+          if( ViewService.isCurrentStateUiView($scope.uiViewName) ) {
+            tabsCtrl.select($scope.tabIndex);
+          }
+        });
+
       };
     }
   };
@@ -185,7 +227,7 @@ angular.module('ionic.ui.tabs', ['ngAnimate'])
     replace: true,
     scope: true,
     template: '<div class="tabs">' + 
-      '<tab-controller-item title="{{controller.title}}" icon="{{controller.icon}}" icon-on="{{controller.iconOn}}" icon-off="{{controller.iconOff}}" active="controller.isVisible" index="$index" ng-repeat="controller in controllers"></tab-controller-item>' + 
+      '<tab-controller-item title="{{c.title}}" icon="{{c.icon}}" icon-on="{{c.iconOn}}" icon-off="{{c.iconOff}}" active="c.isVisible" index="$index" ng-repeat="c in controllers"></tab-controller-item>' + 
     '</div>',
     link: function($scope, $element, $attr, tabsCtrl) {
       $element.addClass($scope.tabsType);
@@ -194,7 +236,7 @@ angular.module('ionic.ui.tabs', ['ngAnimate'])
   };
 })
 
-.directive('tabControllerItem', function() {
+.directive('tabControllerItem', ['$window', '$state', function($window, $state) {
   return {
     restrict: 'E',
     replace: true,
@@ -212,26 +254,26 @@ angular.module('ionic.ui.tabs', ['ngAnimate'])
       if(attrs.icon) {
         scope.iconOn = scope.iconOff = attrs.icon;
       }
-      scope.selectTab = function(index) {
+      
+      scope.selectTab = function() {
         tabsCtrl.select(scope.index);
       };
     },
     template: 
       '<a ng-class="{active:active}" ng-click="selectTab()" class="tab-item">' +
-        '<i class="{{icon}}" ng-if="icon"></i>' +
+        '<i class="icon {{icon}}" ng-if="icon"></i>' +
         '<i class="{{iconOn}}" ng-if="active"></i>' +
         '<i class="{{iconOff}}" ng-if="!active"></i> {{title}}' +
       '</a>'
   };
-})
+}])
 
 .directive('tabBar', function() {
   return {
     restrict: 'E',
     replace: true,
     transclude: true,
-    template: '<div class="tabs tabs-primary" ng-transclude>' + 
-    '</div>'
+    template: '<div class="tabs tabs-primary" ng-transclude></div>'
   };
 });
 

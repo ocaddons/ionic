@@ -147,7 +147,7 @@ angular.module('ionic.ui.navRouter', ['ionic.service.gesture'])
 /**
  * Our Nav Bar directive which updates as the controller state changes.
  */
-.directive('navBar', ['$rootScope', '$animate', '$compile', function($rootScope, $animate, $compile) {
+.directive('navRouterBar', ['$rootScope', '$animate', '$compile', function($rootScope, $animate, $compile) {
 
   /**
    * Perform an animation between one tab bar state and the next.

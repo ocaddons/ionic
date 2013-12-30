@@ -12,20 +12,24 @@
     <script src="../../../../dist/js/angular/angular-route.js"></script>
     <script src="../../../../dist/js/angular/angular-touch.js"></script>
     <script src="../../../../dist/js/angular/angular-sanitize.js"></script>
+    <script src="../../../../dist/js/angular-ui/angular-ui-router.js"></script>
     <script src="../../../../dist/js/ionic-angular.js"></script>
+    <style>
+      
+    </style>
   </head>
   <body>
 
-    <pane nav-state animation="slide-left-right" ng-controller="AppCtrl">
-      <nav-bar animation="nav-title-slide-ios7" 
+    <div animation="slide-left-right" ng-controller="AppCtrl">
+      <view-bar animation="nav-title-slide-ios7" 
                type="bar-positive" 
                back-button-type="button-icon" 
-               back-button-icon="ion-arrow-left-c"></nav-bar>
-      <ui-view></ui-view>
-    </pane>
+               back-button-icon="ion-arrow-left-c"></view-bar>
+      <ui-view animation="nav-title-slide-ios7"></ui-view>
+    </div>
 
     <script id="sign-in.html" type="text/ng-template">
-      <nav-view title="'Sign-In'">
+      <view title="'Sign-In'">
         <content has-header="true">
           <div class="list">
             <label class="item item-input">
@@ -41,60 +45,171 @@
             <button class="button button-block button-positive" ng-click="signIn(user)">
               Sign-In
             </button>
+            <p class="text-center">
+              <a href="#/sign-in">Sign-In</a> - 
+              <a href="#/forgot-password">Forgot password</a> -
+              <a ui-sref="contact">Contact</a>
+            </p>
+            <p>
+              Current View: {{ $viewHistory.currentView }}<br>
+              Back View: {{ $viewHistory.backView }}<br>
+              Forward View: {{ $viewHistory.forwardView }}
+            </p>
           </div>
         </content>
-      </nav-view>
+      </view>
+    </script>
+
+    <script id="forgot-password.html" type="text/ng-template">
+      <view title="'Forgot Password'">
+        <content has-header="true" padding="true">
+          <p>Seriously!? Again?!</p>
+          <p>How about I just give you a password, hows this: <br><code>{{password}}</code></p>
+          <p class="text-center">
+            <a href="#/sign-in">Sign-In</a> - 
+            <a href="#/forgot-password">Forgot password</a> -
+            <a href="#/contact">Contact</a>
+          </p>
+          <p>
+            Current View: {{ $viewHistory.currentView }}<br>
+            Back View: {{ $viewHistory.backView }}<br>
+            Forward View: {{ $viewHistory.forwardView }}
+          </p>
+        </content>
+      </view>
+    </script>
+
+    <script id="contact.html" type="text/ng-template">
+      <view title="'Contact'">
+        <content has-header="true" padding="true">
+          <p>@drifty</p>
+          <p class="text-center">
+            <a href="#/sign-in">Sign-In</a> - 
+            <a href="#/forgot-password">Forgot password</a> -
+            <a href="#/contact">Contact</a>
+          </p>
+          <p>
+            Current View: {{ $viewHistory.currentView }}<br>
+            Back View: {{ $viewHistory.backView }}<br>
+            Forward View: {{ $viewHistory.forwardView }}
+          </p>
+        </content>
+      </view>
     </script>
 
     <script id="tabs.html" type="text/ng-template">
-      <nav-view>
 
-        <tabs tabs-style="tabs-icon-top" tabs-type="tabs-positive" animate-nav="false">
+      <tabs tabs-style="tabs-icon-top" tabs-type="tabs-positive" animate-nav="false">
 
-          <tab title="Automobiles" icon="icon ion-model-s">
-            <div ui-view="auto-ui-view"></div>
-          </tab>
+        <tab title="Automobiles" icon="ion-model-s" href="#/tabs/autos">
+          <div ui-view="auto-ui-view"></div>
+        </tab>
 
-          <tab title="Add" icon="icon ion-plus-circled" left-buttons="leftButtons" right-buttons="buttons">
-            <div ui-view="addautos"></div>
-          </tab>
+        <tab title="Add" icon="ion-plus-circled" href="#/tabs/add-auto">
+          <div ui-view="add-autos-ui-view"></div>
+        </tab>
 
-          <tab title="Info" icon="icon ion-information-circled">
+        <tab title="About" icon="ion-ios7-world" ui-sref="tabs.about">
+          <div ui-view="about-ui-view"></div>
+        </tab>
+
+        <tab title="Info" icon="ion-information-circled">
+          <view title="'Information'">
             <content has-header="true" has-tabs="true" padding="true">
-              <h3>About this app</h3>
+              <h3>Information</h3>
               <p>
                 This is a sample seed project for the Ionic Framework. Please change it to match your needs.
               </p>
+              <p>
+                Current View: {{ $viewHistory.currentView }}<br>
+                Back View: {{ $viewHistory.backView }}<br>
+                Forward View: {{ $viewHistory.forwardView }}
+              </p>
             </content>
-          </tab>
+          </view>
+        </tab>
 
-          <tab title="Sign-Out" icon="icon ion-log-out">
-          </tab>
+        <tab title="Sign-Out" icon="ion-log-out" href="#/sign-in">
+        </tab>
 
-        </tabs>
+      </tabs>
 
-      </nav-view>
     </script>
 
     <script id="auto-list.html" type="text/ng-template">
-      <content has-header="true" has-tabs="true">
-        <list>
-          <item ng-repeat="auto in autos" ng-href="#/tabs/autos/{{ $index }}">
-            {{ auto.year }} {{ auto.make }} {{ auto.model }}
-          </item>
-        </list>
-      </content>
+      <view title="'Auto List'">
+        <content has-header="true" has-tabs="true">
+          <list>
+            <item ng-repeat="auto in autos" ng-href="#/tabs/autos/{{ $index }}">
+              {{ auto.year }} {{ auto.make }} {{ auto.model }}
+            </item>
+          </list>
+          <p>
+            <button ng-click="testStateGo()">Test State Go</button>
+          </p>
+          <p>
+            Current View: {{ $viewHistory.currentView }}<br>
+            Back View: {{ $viewHistory.backView }}<br>
+            Forward View: {{ $viewHistory.forwardView }}
+          </p>
+        </content>
+      </view>
     </script>
 
     <script id="auto-detail.html" type="text/ng-template">
-      <nav-view title="'Auto Details'">
+      <view title="'Auto Details'">
         <content has-header="true" has-tabs="true" padding="true">
           <h2>{{ auto.year }} {{ auto.make }} {{ auto.model }}</h2>
           <p ng-bind="auto.desc"></p>
           <p><a class="button" ng-href="{{ auto.url }}">Read More</a></p>
+          <ul>
+            <li ng-repeat="auto in autos">
+              <a ng-href="#/tabs/autos/{{ $index }}">{{ auto.year }} {{ auto.make }} {{ auto.model }}</a>
+            </li>
+          </ul>
+          <p>
+            Current View: {{ $viewHistory.currentView }}<br>
+            Back View: {{ $viewHistory.backView }}<br>
+            Forward View: {{ $viewHistory.forwardView }}
+          </p>
         </content>
-      </nav-view>
+      </view>
     </script>
+
+    <script id="add-auto.html" type="text/ng-template">
+      <view title="'Add Auto'">
+        <content has-header="true" has-tabs="true" padding="true">
+          form to add an auto
+          <p>
+            Current View: {{ $viewHistory.currentView }}<br>
+            Back View: {{ $viewHistory.backView }}<br>
+            Forward View: {{ $viewHistory.forwardView }}
+          </p>
+        </content>
+      </view>
+    </script>
+
+    <script id="about.html" type="text/ng-template">
+      <view title="'About'">
+        <content has-header="true" has-tabs="true" padding="true">
+          <h3>About this app!</h3>
+          <p>
+            Current View: {{ $viewHistory.currentView }}<br>
+            Back View: {{ $viewHistory.backView }}<br>
+            Forward View: {{ $viewHistory.forwardView }}
+          </p>
+        </content>
+      </view>
+    </script>
+
+    <script id="ngview.html" type="text/ng-template">
+      <view title="'NGVIEW'">
+        <content has-header="true" has-tabs="true" padding="true">
+          <h3>NGVIEW</h3>
+        </content>
+      </view>
+    </script>
+
     <script>
       angular.module('navTest', ['ionic'])
 
@@ -106,6 +221,15 @@
             url: "/sign-in",
             templateUrl: "sign-in.html",
             controller: 'SignInCtrl'
+          })
+          .state('forgotpassword', {
+            url: "/forgot-password",
+            templateUrl: "forgot-password.html",
+            controller: 'ForgotPasswordCtrl'
+          })
+          .state('contact', {
+            url: "/contact",
+            templateUrl: "contact.html"
           })
           .state('tabs', {
             url: "/tabs",
@@ -121,6 +245,15 @@
               }
             }
           })
+          .state('tabs.addauto', {
+            url: "/add-auto",
+            views: {
+              'add-autos-ui-view': {
+                templateUrl: "add-auto.html",
+                controller: 'AutoAddCtrl'
+              }
+            }
+          })
           .state('tabs.autodetail', {
             url: "/autos/:id",
             views: {
@@ -129,41 +262,64 @@
                 controller: 'AutoDetailCtrl'
               }
             }
+          })
+          .state('tabs.about', {
+            url: "/about",
+            views: {
+              'about-ui-view': {
+                templateUrl: "about.html"
+              }
+            }
           });
 
 
-        $urlRouterProvider.otherwise("/sign-in");
+         $urlRouterProvider.otherwise("/sign-in");
 
       })
 
+
       .controller('SignInCtrl', function($scope, $state) {
-        console.log('SignInCtrl');
+        //console.log('SignInCtrl');
 
         $scope.signIn = function(user) {
           $state.go('tabs.autolist');
         };
       })
 
+      .controller('ForgotPasswordCtrl', function($scope, $state) {
+        //console.log('ForgotPasswordCtrl');
+        $scope.password = Math.round(Math.random() * 10000);
+      })
+
       .controller('AutoListCtrl', function($scope, $state) {
-        console.log('AutoListCtrl');
+        //console.log('AutoListCtrl');
+
+        $scope.testStateGo = function() {
+          var toParams = { id: 4 };
+          $state.go('tabs.autodetail', toParams);
+        };
       })
 
       .controller('AutoDetailCtrl', function($scope, $state, $stateParams) {
-        console.log('AutoDetailCtrl', $stateParams.id);
+        //console.log('AutoDetailCtrl', $stateParams.id);
 
         $scope.auto = $scope.autos[$stateParams.id];
       })
 
+      .controller('AutoAddCtrl', function($scope) {
+        //console.log('AutoAddCtrl');
+      })
+
       .controller('AppCtrl', function($scope, $state) {
-        console.log('AppCtrl');
+        //console.log('AppCtrl');
 
-        var isSignedIn = false;
+        // var isSignedIn = true;
 
-        if(!isSignedIn) {
-          $state.go('signin');
-        } else {
-          $state.go('tabs.autolist');
-        }
+        // if(!isSignedIn) {
+        //   $state.go('signin');
+        // } else {
+        //   $state.go('tabs.autolist');
+        // }
 
         $scope.autos = [
           { make: 'Cord', model: '810', year: '1936', desc: 'Styled by Gordon M. Buehrig, it featured front-wheel drive and independent front suspension;[ the front drive enabled the 810 to be so low, runningboards were unnecessary. Powered by a 4,739 cc (289 cu in) Lycoming V8 of the same 125 hp (93 kW) as the L-29, The 810 had a four-speed electrically-selected semi-automatic transmission, among other innovative features.', url: 'http://en.wikipedia.org/wiki/Cord_810/812' },
