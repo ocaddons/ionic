@@ -1,7 +1,7 @@
-<html ng-app="navTest">
+<html ng-app="navState">
   <head>
     <meta charset="utf-8">
-    <title>Nav Bars</title>
+    <title>Nav State</title>
 
     <!-- Sets initial viewport load and disables zooming  -->
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
@@ -202,16 +202,8 @@
       </view>
     </script>
 
-    <script id="ngview.html" type="text/ng-template">
-      <view title="'NGVIEW'">
-        <content has-header="true" has-tabs="true" padding="true">
-          <h3>NGVIEW</h3>
-        </content>
-      </view>
-    </script>
-
     <script>
-      angular.module('navTest', ['ionic'])
+      angular.module('navState', ['ionic'])
 
 
       .config(function($stateProvider, $urlRouterProvider) {
@@ -275,8 +267,8 @@
 
          $urlRouterProvider.otherwise("/sign-in");
 
-      })
 
+      })
 
       .controller('SignInCtrl', function($scope, $state) {
         //console.log('SignInCtrl');
