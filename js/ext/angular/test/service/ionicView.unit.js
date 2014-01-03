@@ -331,7 +331,6 @@ describe('Ionic View Service', function() {
 
     expect(forwardView).toEqual(null);
   }));
-return
 
   it('Should nav to a container history, move around in it, and come back', inject(function($state) {
     // go to the first page

@@ -46,7 +46,7 @@ angular.module('ionic.ui.tabs', ['ionic.service.view', 'ngAnimate'])
         $scope.tabCount++;
       };
 
-      this.select = function(tabIndex, viewTitle) {
+      this.select = function(tabIndex, emitChange) {
         if(tabIndex !== $scope.selectedIndex) {
           $scope.selectedIndex = tabIndex;
           $scope.activeAnimation = $scope.animation;
@@ -61,13 +61,15 @@ angular.module('ionic.ui.tabs', ['ionic.service.view', 'ngAnimate'])
             if(tabIndex === this.controllers[x].tabIndex) {
               viewData.title = this.controllers[x].title;
               viewData.historyId = this.controllers[x].$historyId;
-              viewData.href = this.controllers[x].href;
+              viewData.url = this.controllers[x].url;
               viewData.uiSref = this.controllers[x].viewSref;
               viewData.uiViewName = this.controllers[x].uiViewName;
               break;
             }
           }
-          $scope.$emit('viewState.viewShown', viewData);
+          if(emitChange) {
+            $scope.$emit('viewState.changeHistory', viewData);
+          }
         }
       };
 
@@ -135,7 +137,7 @@ angular.module('ionic.ui.tabs', ['ionic.service.view', 'ngAnimate'])
         $scope.iconOn = $attr.iconOn;
         $scope.iconOff = $attr.iconOff;
         $scope.viewSref = $attr.uiSref;
-        $scope.href = $attr.href;
+        $scope.url = $attr.href;
 
         // Should we hide a back button when this tab is shown
         $scope.hideBackButton = $scope.$eval($attr.hideBackButton);
@@ -208,7 +210,8 @@ angular.module('ionic.ui.tabs', ['ionic.service.view', 'ngAnimate'])
         });
 
         $rootScope.$on('$stateChangeSuccess', function(value){
-          if( ViewService.isCurrentStateUiView($scope.uiViewName) ) {
+          if( ViewService.isCurrentStateUiView($scope.uiViewName) &&
+              $scope.tabIndex !== tabsCtrl.selectedIndex) {
             tabsCtrl.select($scope.tabIndex);
           }
         });
@@ -256,7 +259,7 @@ angular.module('ionic.ui.tabs', ['ionic.service.view', 'ngAnimate'])
       }
       
       scope.selectTab = function() {
-        tabsCtrl.select(scope.index);
+        tabsCtrl.select(scope.index, true);
       };
     },
     template: 
