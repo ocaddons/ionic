@@ -1,5 +1,5 @@
 describe('Ionic View Service', function() {
-  var viewService, rootScope, stateProvider;
+  var viewService, rootScope, stateProvider, window;
 
   beforeEach(module('ionic.service.view'));
   beforeEach(module('ui.router'));
@@ -37,10 +37,11 @@ describe('Ionic View Service', function() {
 
   }));
 
-  beforeEach(inject(function(ViewService, $rootScope) {
+  beforeEach(inject(function(ViewService, $rootScope, $window) {
     viewService = ViewService;
     rootScope = $rootScope;
-    rootScope.$historyId = 'root';
+    window = $window;
+    window.history.go = function(val) { return val };
   }));
 
   it('Should do nothing if the same state happens', inject(function($state) {
@@ -388,6 +389,76 @@ describe('Ionic View Service', function() {
     rootScope.$apply();
     viewService.register({});
     expect(viewService.getCurrentStateName()).toEqual('about');
+  }));
+
+  it('Should init root viewHistory data', inject(function() {
+    expect(rootScope.$viewHistory.backView).toEqual(null);
+    expect(rootScope.$viewHistory.currentView).toEqual(null);
+    expect(rootScope.$viewHistory.forwardView).toEqual(null);
+    expect(rootScope.$viewHistory.navDirection).toEqual(null);
+    expect(rootScope.$viewHistory.histories).toEqual({
+        root: { historyId: 'root', parentHistoryId: null, stack: [] }
+    });
+  }));
+
+  it('Should create a viewService view', inject(function($location) {
+    var newView = viewService.createView();
+    expect(newView).toEqual(null);
+
+    newView = viewService.createView({ stateName: 'about', url: '/url',  });
+    expect(newView.stateName).toEqual('about');
+  }));
+
+  it('Should go() to a view', inject(function($location) {
+    var newView = viewService.createView({ stateName: 'about' });
+    newView.go();
+    rootScope.$apply();
+    expect($location.url()).toEqual('/about');
+
+    $location.url('/nochange');
+    newView = viewService.createView({ url: '/nochange' });
+    var result = newView.go();
+    expect(result).toEqual(null);
+
+    $location.url('/nochange')
+    newView = viewService.createView({ url: '/nochange' });
+    result = newView.go();
+    expect(result).toEqual(null);
+
+    newView = rootScope.$viewHistory.backView = viewService.createView({ url: '/url' });
+    result = newView.go();
+    expect(result).toEqual(-1);
+
+    newView = rootScope.$viewHistory.forwardView = viewService.createView({ url: '/url' });
+    result = newView.go();
+    expect(result).toEqual(1);
+
+    newView = viewService.createView({ url: '/url' });
+    newView.go();
+    expect($location.url()).toEqual('/url');
+  }));
+
+  it('Should change history on event changeHistory', inject(function($location, $state) {
+    $location.url('/original');
+
+    rootScope.$broadcast("viewState.changeHistory");
+    expect($location.url()).toEqual('/original');
+
+    rootScope.$broadcast("viewState.changeHistory", { uiSref: 'about' });
+    expect($location.url()).toEqual('/about');
+
+    rootScope.$broadcast("viewState.changeHistory", { url: '/url' });
+    expect($location.url()).toEqual('/url');
+
+    rootScope.$viewHistory.histories['h123'] = { stack: [] }
+    rootScope.$broadcast("viewState.changeHistory", { historyId: 'h123' });
+    expect($location.url()).toEqual('/url');
+
+    var newView = viewService.createView({ stateName: 'about' });
+    rootScope.$viewHistory.histories['h123'].stack.push(newView);
+    rootScope.$broadcast("viewState.changeHistory", { historyId: 'h123' });
+    rootScope.$apply();
+    expect($state.current.name).toEqual('about');
   }));
 
 });

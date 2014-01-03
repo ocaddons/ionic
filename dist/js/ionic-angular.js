@@ -522,9 +522,9 @@ angular.module('ionic.service.templateLoad', [])
 angular.module('ionic.service.view', ['ui.router'])
 
 
-.run(     ['$rootScope', '$state', '$window', '$document', 
-  function( $rootScope,   $state,   $window,   $document) {
-    
+.run(     ['$rootScope', '$state', '$location', '$document', 
+  function( $rootScope,   $state,   $location,   $document) {
+
   // init the variables that keep track of the view history
   $rootScope.$viewHistory = {
     histories: { root: { historyId: 'root', parentHistoryId: null, stack: [] } },
@@ -538,59 +538,64 @@ angular.module('ionic.service.view', ['ui.router'])
     if(!data) return;
 
     var hist = (data.historyId ? $rootScope.$viewHistory.histories[ data.historyId ] : null );
-    if(hist) {
-
-      if(hist.stack.length) {
-        var view = hist.stack[ hist.stack.length - 1 ];
-        view.go();
-        return;
-      }
+    if(hist && hist.stack.length) {
+      // the history they're going to already exists
+      // go to it's last view in its stack
+      var view = hist.stack[ hist.stack.length - 1 ];
+      return view.go();
     }
 
     if(!data.url && data.uiSref) {
       data.url = $state.href(data.uiSref);
     }
     
-    if(data.url &&
-       data.url !== $window.location.href && 
-       data.url !== $window.location.hash && 
-       data.url !== $window.location.pathname) {
-      $window.location.href = data.url;
+    if(data.url) {
+      if(data.url.indexOf('#') === 0) {
+        data.url = data.url.replace('#', '');
+      }
+      if(data.url !== $location.url()) {
+        $location.url(data.url);
+      }
     }
 
   });
 
   $rootScope.$on('viewState.viewShown', function(e, data) {
     if(data && data.title) {
-      document.title = data.title;
+      $document.title = data.title;
     }
   });
 
 }])
 
-.factory('ViewService', ['$rootScope', '$state', '$window', '$window', 
-                function( $rootScope,   $state,   $window,   $window) {
+.factory('ViewService', ['$rootScope', '$state', '$location', '$window', 
+                function( $rootScope,   $state,   $location,   $window) {
 
   var View = function(){};
   View.prototype.initialize = function(data) {
-    for(var name in data) {
-      this[name] = data[name];
+    if(data) {
+      for(var name in data) this[name] = data[name];
+      return this;
     }
+    return null;
   };
   View.prototype.go = function() {
-    if(this.url &&
-       this.url !== $window.location.href &&
-       this.url !== $window.location.hash &&
-       this.url !== $window.location.pathname) {
+    if(this.url && this.url !== $location.url()) {
 
       if($rootScope.$viewHistory.backView === this) {
         return $window.history.go(-1);
       } else if($rootScope.$viewHistory.forwardView === this) {
         return $window.history.go(1);
       }
+
+      return $location.url( this.url );
     }
 
-    $state.go(this.stateName, this.stateParams);
+    if(this.stateName) {
+      return $state.go(this.stateName, this.stateParams);
+    }
+
+    return null;
   };
 
   return {
@@ -654,8 +659,7 @@ angular.module('ionic.service.view', ['ui.router'])
         viewHistory.navDirection = 'forward';
 
         // add the new view to the stack
-        var newView = new View();
-        newView.initialize({ 
+        var newView = this.createView({ 
           viewId: scope.$viewId,
           index: hist.stack.length,
           historyId: hist.historyId,
@@ -665,7 +669,7 @@ angular.module('ionic.service.view', ['ui.router'])
           stateName: this.getCurrentStateName(),
           stateParams: this.getCurrentStateParams(),
           url: $window.location.href
-        })
+        });
         hist.stack.push(newView);
 
         viewHistory.histories[scope.$viewId] = hist.stack[ hist.stack.length - 1];
@@ -678,6 +682,11 @@ angular.module('ionic.service.view', ['ui.router'])
 
     registerHistory: function(scope) {
       scope.$historyId = 'h' + Math.round(Math.random() * 9999999999);
+    },
+
+    createView: function(data) {
+      var newView = new View();
+      return newView.initialize(data);
     },
 
     getCurrentView: function() {
@@ -2827,7 +2836,7 @@ angular.module('ionic.ui.viewState', ['ionic.service.view', 'ionic.service.gestu
       alignTitle: '@',
       hideBackButton: '@',
       hideNavBar: '@',
-      animate: '@',
+      animate: '@'
     },
     link: function($scope, $element, $attr) {
 
@@ -2934,27 +2943,12 @@ angular.module('ionic.ui.viewState', ['ionic.service.view', 'ionic.service.gestu
         scope.$on('$viewContentLoading', eventHook);
         update(false);
 
-        function cleanupLastView(removeScope, removeElement) {
-          if (removeScope) {
-            removeScope.$destroy();
-            removeScope = null;
-          }
-          if(removeElement) {
-            console.log('cleanupLastView removeElement')
-            $animate.leave(removeElement, function(){
-              console.log('leave complete')
-            });
-            removeElement = null;
-          }
-        }
-
         function update(doAnimation) {
           var locals = $state.$current && $state.$current.locals[name],
               template = (locals && locals.$template ? locals.$template.trim() : null);
           if (locals === viewLocals) return; // nothing to do
 
           if (template) {
-            console.log('--------update')
 
             var removeElement = currentElement;
             var removeScope = viewScope;
@@ -3003,14 +2997,13 @@ angular.module('ionic.ui.viewState', ['ionic.service.view', 'ionic.service.gestu
 
               if(removeElement) {
                 $animate.leave(removeElement, function onUiViewLeave() {
-                  console.log('leave complete')
+                  
                 });
               }
 
               $animate.enter(currentElement, $element, null, function onUiViewEnter () {
-                console.log('enter complete')
-                if (angular.isDefined(autoScrollExp)
-                  && (!autoScrollExp || scope.$eval(autoScrollExp))) {
+                if (angular.isDefined(autoScrollExp) && 
+                   (!autoScrollExp || scope.$eval(autoScrollExp))) {
                   $anchorScroll();
                 }
               });

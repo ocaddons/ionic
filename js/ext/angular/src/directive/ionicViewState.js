@@ -210,7 +210,7 @@ angular.module('ionic.ui.viewState', ['ionic.service.view', 'ionic.service.gestu
       alignTitle: '@',
       hideBackButton: '@',
       hideNavBar: '@',
-      animate: '@',
+      animate: '@'
     },
     link: function($scope, $element, $attr) {
 
@@ -317,27 +317,12 @@ angular.module('ionic.ui.viewState', ['ionic.service.view', 'ionic.service.gestu
         scope.$on('$viewContentLoading', eventHook);
         update(false);
 
-        function cleanupLastView(removeScope, removeElement) {
-          if (removeScope) {
-            removeScope.$destroy();
-            removeScope = null;
-          }
-          if(removeElement) {
-            console.log('cleanupLastView removeElement')
-            $animate.leave(removeElement, function(){
-              console.log('leave complete')
-            });
-            removeElement = null;
-          }
-        }
-
         function update(doAnimation) {
           var locals = $state.$current && $state.$current.locals[name],
               template = (locals && locals.$template ? locals.$template.trim() : null);
           if (locals === viewLocals) return; // nothing to do
 
           if (template) {
-            console.log('--------update')
 
             var removeElement = currentElement;
             var removeScope = viewScope;
@@ -386,14 +371,13 @@ angular.module('ionic.ui.viewState', ['ionic.service.view', 'ionic.service.gestu
 
               if(removeElement) {
                 $animate.leave(removeElement, function onUiViewLeave() {
-                  console.log('leave complete')
+                  
                 });
               }
 
               $animate.enter(currentElement, $element, null, function onUiViewEnter () {
-                console.log('enter complete')
-                if (angular.isDefined(autoScrollExp)
-                  && (!autoScrollExp || scope.$eval(autoScrollExp))) {
+                if (angular.isDefined(autoScrollExp) && 
+                   (!autoScrollExp || scope.$eval(autoScrollExp))) {
                   $anchorScroll();
                 }
               });
