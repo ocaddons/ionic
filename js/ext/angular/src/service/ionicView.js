@@ -147,7 +147,7 @@ angular.module('ionic.service.view', ['ui.router'])
           stateId: currentStateId,
           stateName: this.getCurrentStateName(),
           stateParams: this.getCurrentStateParams(),
-          url: $window.location.href
+          url: $location.url()
         });
         hist.stack.push(newView);
 

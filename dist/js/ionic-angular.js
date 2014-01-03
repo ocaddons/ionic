@@ -668,7 +668,7 @@ angular.module('ionic.service.view', ['ui.router'])
           stateId: currentStateId,
           stateName: this.getCurrentStateName(),
           stateParams: this.getCurrentStateParams(),
-          url: $window.location.href
+          url: $location.url()
         });
         hist.stack.push(newView);
 
@@ -2346,6 +2346,7 @@ angular.module('ionic.ui.tabs', ['ionic.service.view', 'ngAnimate'])
 
       this.select = function(tabIndex, emitChange) {
         if(tabIndex !== $scope.selectedIndex) {
+
           $scope.selectedIndex = tabIndex;
           $scope.activeAnimation = $scope.animation;
           _this.selectController(tabIndex);
@@ -2362,6 +2363,7 @@ angular.module('ionic.ui.tabs', ['ionic.service.view', 'ngAnimate'])
               viewData.url = this.controllers[x].url;
               viewData.uiSref = this.controllers[x].viewSref;
               viewData.uiViewName = this.controllers[x].uiViewName;
+              viewData.hasUiView = this.controllers[x].hasUiView;
               break;
             }
           }
@@ -2436,6 +2438,9 @@ angular.module('ionic.ui.tabs', ['ionic.service.view', 'ngAnimate'])
         $scope.iconOff = $attr.iconOff;
         $scope.viewSref = $attr.uiSref;
         $scope.url = $attr.href;
+        if($scope.url && $scope.url.indexOf('#') === 0) {
+          $scope.url = $scope.url.replace('#', '');
+        }
 
         // Should we hide a back button when this tab is shown
         $scope.hideBackButton = $scope.$eval($attr.hideBackButton);

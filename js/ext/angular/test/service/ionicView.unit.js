@@ -62,6 +62,20 @@ describe('Ionic View Service', function() {
     expect(currentView.forwardViewId).toEqual(null);
   }));
 
+  it('Should create a new view', inject(function($location, $state) {
+    $location.url('/home');
+    var view1Scope = {};
+    viewService.register(view1Scope);
+
+    var currentView = viewService.getCurrentView();
+    expect(currentView.viewId).toBeDefined();
+    expect(currentView.index).toEqual(0);
+    expect(currentView.historyId).toBeDefined();
+    expect(currentView.backViewId).toEqual(null);
+    expect(currentView.forwardViewId).toEqual(null);
+    expect(currentView.url).toEqual('/home');
+  }));
+
   it('Should register two sequential views', inject(function($state) {
     $state.go('home');
     rootScope.$apply();
@@ -459,6 +473,10 @@ describe('Ionic View Service', function() {
     rootScope.$broadcast("viewState.changeHistory", { historyId: 'h123' });
     rootScope.$apply();
     expect($state.current.name).toEqual('about');
+  }));
+
+  it('Should change history, and when going back end up at the same view', inject(function($location, $state) {
+    
   }));
 
 });
