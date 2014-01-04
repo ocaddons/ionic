@@ -155,12 +155,6 @@ angular.module('ionic.ui.tabs', ['ionic.service.view', 'ngAnimate'])
         // tell any parent nav controller to animate
         $scope.animate = $scope.$eval($attr.animate);
 
-        // Grab whether we should update any parent nav router on tab changes
-        $scope.doesUpdateNavRouter = $scope.$eval($attr.doesUpdateNavRouter);
-        if($scope.doesUpdateNavRouter !== false) {
-          $scope.doesUpdateNavRouter = true;
-        }
-
         var leftButtonsGet = $parse($attr.leftButtons);
         $scope.$watch(leftButtonsGet, function(value) {
           $scope.leftButtons = value;

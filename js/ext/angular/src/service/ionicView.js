@@ -24,24 +24,28 @@ angular.module('ionic.service.view', ['ui.router'])
       return view.go();
     }
 
+    // this history does not have a URL, but it does have a uiSref
+    // figure out its URL from the uiSref
     if(!data.url && data.uiSref) {
       data.url = $state.href(data.uiSref);
     }
     
     if(data.url) {
+      // don't let it start with a #, messes with $location.url()
       if(data.url.indexOf('#') === 0) {
         data.url = data.url.replace('#', '');
       }
       if(data.url !== $location.url()) {
+        // we've got a good URL, ready GO!
         $location.url(data.url);
       }
     }
-
   });
 
+  // Set the document title when a new view is shown
   $rootScope.$on('viewState.viewShown', function(e, data) {
     if(data && data.title) {
-      $document.title = data.title;
+      $document[0].title = data.title;
     }
   });
 
@@ -67,7 +71,7 @@ angular.module('ionic.service.view', ['ui.router'])
         return $window.history.go(1);
       }
 
-      return $location.url( this.url );
+      return $location.url(this.url);
     }
 
     if(this.stateName) {
@@ -151,12 +155,20 @@ angular.module('ionic.service.view', ['ui.router'])
         });
         hist.stack.push(newView);
 
-        viewHistory.histories[scope.$viewId] = hist.stack[ hist.stack.length - 1];
+        viewHistory.histories[scope.$viewId] = hist.stack[ hist.stack.length - 1 ];
       }
 
       viewHistory.currentView = this._getView(scope.$viewId);
       viewHistory.backView = this._getBackView(viewHistory.currentView);
       viewHistory.forwardView = this._getForwardView(viewHistory.currentView);
+
+      // broadcast that a view has been shown, and set what its title is
+      if(scope.$$childHead && scope.$$childHead.title) {
+        viewHistory.currentView.title = scope.$$childHead.title;
+      } else if (scope.title) {
+        viewHistory.currentView.title = scope.title;
+      }
+      $rootScope.$broadcast('viewState.viewShown', viewHistory.currentView);
     },
 
     registerHistory: function(scope) {

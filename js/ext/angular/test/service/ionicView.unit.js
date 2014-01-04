@@ -475,8 +475,17 @@ describe('Ionic View Service', function() {
     expect($state.current.name).toEqual('about');
   }));
 
-  it('Should change history, and when going back end up at the same view', inject(function($location, $state) {
-    
+  it('Should update document title', inject(function($document) {
+    $document.title = 'Original Title';
+
+    rootScope.$broadcast("viewState.viewShown");
+    expect($document.title).toEqual('Original Title');
+
+    rootScope.$broadcast("viewState.viewShown", {});
+    expect($document.title).toEqual('Original Title');
+
+    rootScope.$broadcast("viewState.viewShown", { title: 'New Title' });
+    expect($document.title).toEqual('New Title');
   }));
 
 });

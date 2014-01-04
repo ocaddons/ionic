@@ -134,7 +134,7 @@ angular.module('ionic.ui.viewState', ['ionic.service.view', 'ionic.service.gestu
           $scope.enableBackButton = data.hideBackButton !== true;
         }
 
-        if(data.animate !== false && typeof data.title !== 'undefined') {
+        if(data.animate !== false && data.title) {
           animate($scope, $element, oldTitle, data, function() {
             hb.align();
           });
@@ -143,43 +143,9 @@ angular.module('ionic.ui.viewState', ['ionic.service.view', 'ionic.service.gestu
         }
       };
 
-      // $scope.$parent.$on('viewState.viewShown', function(e, data) {
-      //   updateHeaderData(data);
-      // });
-
-      // $scope.$parent.$on('viewState.showBackButton', function(e, data) {
-      //   $scope.enableBackButton = true;
-      // });
-
-      // $scope.$parent.$on('viewState.hideBackButton', function(e, data) {
-      //   $scope.enableBackButton = false;
-      // });
-
-      // // Listen for changes on title change, and update the title
-      // $scope.$parent.$on('viewState.pageChanged', function(e, data) {
-      //   updateHeaderData(data);
-      // });
-
-      // $scope.$parent.$on('viewState.pageShown', function(e, data) {
-      //   updateHeaderData(data);
-      // });
-
-      // $scope.$parent.$on('viewState.titleChanged', function(e, data) {
-      //   var oldTitle = $scope.currentTitle;
-      //   $scope.oldTitle = oldTitle;
-
-      //    if(typeof data.title !== 'undefined') {
-      //     $scope.currentTitle = data.title;
-      //   }
-
-      //   if(data.animate !== false && typeof data.title !== 'undefined') {
-      //     animate($scope, $element, oldTitle, data, function() {
-      //       hb.align();
-      //     });
-      //   } else {
-      //     hb.align();
-      //   }
-      // });
+      $rootScope.$on('viewState.viewShown', function(e, data) {
+        updateHeaderData(data);
+      });
 
       // // If a nav page changes the left or right buttons, update our scope vars
       // $scope.$parent.$on('viewState.leftButtonsChanged', function(e, data) {
@@ -189,9 +155,6 @@ angular.module('ionic.ui.viewState', ['ionic.service.view', 'ionic.service.gestu
       //   $scope.rightButtons = data;
       // });
 
-      $scope.$on('$destroy', function() {
-        //
-      });
     }
   };
 }])

@@ -545,24 +545,28 @@ angular.module('ionic.service.view', ['ui.router'])
       return view.go();
     }
 
+    // this history does not have a URL, but it does have a uiSref
+    // figure out its URL from the uiSref
     if(!data.url && data.uiSref) {
       data.url = $state.href(data.uiSref);
     }
     
     if(data.url) {
+      // don't let it start with a #, messes with $location.url()
       if(data.url.indexOf('#') === 0) {
         data.url = data.url.replace('#', '');
       }
       if(data.url !== $location.url()) {
+        // we've got a good URL, ready GO!
         $location.url(data.url);
       }
     }
-
   });
 
+  // Set the document title when a new view is shown
   $rootScope.$on('viewState.viewShown', function(e, data) {
     if(data && data.title) {
-      $document.title = data.title;
+      $document[0].title = data.title;
     }
   });
 
@@ -588,7 +592,7 @@ angular.module('ionic.service.view', ['ui.router'])
         return $window.history.go(1);
       }
 
-      return $location.url( this.url );
+      return $location.url(this.url);
     }
 
     if(this.stateName) {
@@ -672,12 +676,20 @@ angular.module('ionic.service.view', ['ui.router'])
         });
         hist.stack.push(newView);
 
-        viewHistory.histories[scope.$viewId] = hist.stack[ hist.stack.length - 1];
+        viewHistory.histories[scope.$viewId] = hist.stack[ hist.stack.length - 1 ];
       }
 
       viewHistory.currentView = this._getView(scope.$viewId);
       viewHistory.backView = this._getBackView(viewHistory.currentView);
       viewHistory.forwardView = this._getForwardView(viewHistory.currentView);
+
+      // broadcast that a view has been shown, and set what its title is
+      if(scope.$$childHead && scope.$$childHead.title) {
+        viewHistory.currentView.title = scope.$$childHead.title;
+      } else if (scope.title) {
+        viewHistory.currentView.title = scope.title;
+      }
+      $rootScope.$broadcast('viewState.viewShown', viewHistory.currentView);
     },
 
     registerHistory: function(scope) {
@@ -2453,12 +2465,6 @@ angular.module('ionic.ui.tabs', ['ionic.service.view', 'ngAnimate'])
         // tell any parent nav controller to animate
         $scope.animate = $scope.$eval($attr.animate);
 
-        // Grab whether we should update any parent nav router on tab changes
-        $scope.doesUpdateNavRouter = $scope.$eval($attr.doesUpdateNavRouter);
-        if($scope.doesUpdateNavRouter !== false) {
-          $scope.doesUpdateNavRouter = true;
-        }
-
         var leftButtonsGet = $parse($attr.leftButtons);
         $scope.$watch(leftButtonsGet, function(value) {
           $scope.leftButtons = value;
@@ -2765,7 +2771,7 @@ angular.module('ionic.ui.viewState', ['ionic.service.view', 'ionic.service.gestu
           $scope.enableBackButton = data.hideBackButton !== true;
         }
 
-        if(data.animate !== false && typeof data.title !== 'undefined') {
+        if(data.animate !== false && data.title) {
           animate($scope, $element, oldTitle, data, function() {
             hb.align();
           });
@@ -2774,43 +2780,9 @@ angular.module('ionic.ui.viewState', ['ionic.service.view', 'ionic.service.gestu
         }
       };
 
-      // $scope.$parent.$on('viewState.viewShown', function(e, data) {
-      //   updateHeaderData(data);
-      // });
-
-      // $scope.$parent.$on('viewState.showBackButton', function(e, data) {
-      //   $scope.enableBackButton = true;
-      // });
-
-      // $scope.$parent.$on('viewState.hideBackButton', function(e, data) {
-      //   $scope.enableBackButton = false;
-      // });
-
-      // // Listen for changes on title change, and update the title
-      // $scope.$parent.$on('viewState.pageChanged', function(e, data) {
-      //   updateHeaderData(data);
-      // });
-
-      // $scope.$parent.$on('viewState.pageShown', function(e, data) {
-      //   updateHeaderData(data);
-      // });
-
-      // $scope.$parent.$on('viewState.titleChanged', function(e, data) {
-      //   var oldTitle = $scope.currentTitle;
-      //   $scope.oldTitle = oldTitle;
-
-      //    if(typeof data.title !== 'undefined') {
-      //     $scope.currentTitle = data.title;
-      //   }
-
-      //   if(data.animate !== false && typeof data.title !== 'undefined') {
-      //     animate($scope, $element, oldTitle, data, function() {
-      //       hb.align();
-      //     });
-      //   } else {
-      //     hb.align();
-      //   }
-      // });
+      $rootScope.$on('viewState.viewShown', function(e, data) {
+        updateHeaderData(data);
+      });
 
       // // If a nav page changes the left or right buttons, update our scope vars
       // $scope.$parent.$on('viewState.leftButtonsChanged', function(e, data) {
@@ -2820,9 +2792,6 @@ angular.module('ionic.ui.viewState', ['ionic.service.view', 'ionic.service.gestu
       //   $scope.rightButtons = data;
       // });
 
-      $scope.$on('$destroy', function() {
-        //
-      });
     }
   };
 }])
